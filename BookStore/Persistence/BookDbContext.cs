@@ -1,7 +1,7 @@
-﻿using Biblioteca.Infrastructure.Entities;
+﻿using BookStore.Infrastructure.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace Biblioteca.Persistence
+namespace BookStore.Persistence
 {
     public class BookDbContext : DbContext
     {
@@ -10,6 +10,7 @@ namespace Biblioteca.Persistence
 
         }
         public DbSet<Book> Books { get; set; }
+        public DbSet<Author> Authors { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
     {
 
@@ -21,9 +22,15 @@ namespace Biblioteca.Persistence
             e.Property(l => l.bookName).IsRequired();
             e.Property(l => l.authorid).IsRequired();
             e.Property(l => l.price).IsRequired();
-
+            e.HasOne(x => x.author).WithMany(x => x.books).HasForeignKey(x => x.authorid);
         });
-    }
+        builder.Entity<Author>(e =>
+            {
+            
+            e.HasKey(a => a.authorId);
+            e.Property(s => s.authorId).UseIdentityColumn();
+            });
+        }
 }
 
     }
