@@ -4,6 +4,7 @@ using BookStore.Infrastructure.Entities;
 using BookStore.Infrastructure.Helpers;
 using BookStore.Persistence;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace BookStore.Infrastructure.Services
@@ -57,21 +58,76 @@ namespace BookStore.Infrastructure.Services
             response.Obj = Authordto;
             return response;
         }
-        public async Task<MessagingHelper<List<GetAuthorDTO>>> GetAuthor(bool authorId)
+        public async Task<MessagingHelper<List<GetAuthorDTO>>> GetAuthor(long authorId)
         {
             var response = new MessagingHelper<List<GetAuthorDTO>>();
-            var errorM = "Error: Book not found";
-            var books = _dbContext.Books.Include(x => x.author).SingleOrDefault(b => b.authorid == authorId);
-            if (books == null || books.IsDeleted == true)
+            var errorM = "Error: Author not found";
+            var Author = _dbContext.Authors.SingleOrDefault(b => b.authorId == authorId);
+            if (Author == null || Author.IsDeleted == true)
             {
                 response.Success = false;
                 response.Message = errorM;
                 return response;
             }
-            var bookDetailsDTO = _mapper.Map<GetAuthorDTO>(books);
+            var bookDetailsDTO = _mapper.Map<GetAuthorDTO>(Author);
 
             response.Obj = new List<GetAuthorDTO> { bookDetailsDTO };
             response.Success = true;
+            return response;
+        }
+        public async Task<MessagingHelper<List<GetAuthorDTO>>> AuthorUpdate(long authorId, [FromBody] GetAuthorDTO AuthorUpdate)
+        {
+            var response = new MessagingHelper<List<GetAuthorDTO>>();
+            string errorM = "Error: occurred while updating data";
+            string AuthorNotFound = "Error: Author Not Found";
+            string UpMessage = "Success: Update Author";
+            if (AuthorUpdate.authorId == null|| authorId != AuthorUpdate.authorId ||AuthorUpdate == null)
+            {
+                response.Success = false;
+                response.Message = errorM;
+                return response;
+            }
+            var Author = await _dbContext.Authors.FindAsync(authorId);
+            if (Author == null)
+            {
+                response.Success = false;
+                response.Message = AuthorNotFound;
+                return response;
+            }
+            Author.authorId = AuthorUpdate.authorId;
+            Author.Name = AuthorUpdate.Name;
+            Author.IsDeleted = AuthorUpdate.IsDeleted;
+
+            _dbContext.Entry(Author).State = EntityState.Modified;
+            await _dbContext.SaveChangesAsync();
+
+            var UpBookDTO = _mapper.Map<GetAuthorDTO>(Author);
+
+            response.Obj = new List<GetAuthorDTO> { UpBookDTO };
+            response.Success = true;
+            response.Message = UpMessage;
+            return response;
+        }
+        public async Task<MessagingHelper<List<AuthorDTO>>> DeleteAuthor(long authorId)
+        {
+            var response = new MessagingHelper<List<AuthorDTO>>();
+            string idNotFoundMessage = "Error: author id not Found";
+            var author = _dbContext.Authors.FirstOrDefault(b => b.authorId ==  authorId);
+
+            if (author == null)
+            {
+                response.Success = false;
+                response.Message = idNotFoundMessage;
+                return response;
+            }
+
+            author.IsDeleted = true;
+            _dbContext.SaveChanges();
+
+            var addAuthorDTO = _mapper.Map<AuthorDTO>(author);
+            response.Obj = new List<AuthorDTO> { addAuthorDTO };
+            response.Success = true;
+            response.Message = "Success: Author Deleted";
             return response;
         }
     }

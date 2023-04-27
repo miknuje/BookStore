@@ -15,7 +15,7 @@ namespace BookStore.Controllers
         {
             _service = service;
         }
-        [HttpGet("/{isbn}")]
+        [HttpGet("/{authorId}")]
         public async Task<MessagingHelper<List<GetAuthorDTO>>> GetAuthor(long authorId)
         {
             return await _service.GetAuthor(authorId);
@@ -30,6 +30,16 @@ namespace BookStore.Controllers
         public async Task<MessagingHelper<List<AddAuthorDTO>>> AddAuthor(AddAuthorDTO Authorobj)
         {
             return await _service.AddAuthor(Authorobj);
+        }
+        [HttpPut("PutBook")]
+        public async Task<MessagingHelper<List<GetAuthorDTO>>> AuthorUpdate(long authorId, [FromBody] GetAuthorDTO AuthorUpdate)
+        {
+            return await _service.AuthorUpdate(authorId, AuthorUpdate);
+        }
+        [HttpDelete("DeleteBook")]
+        public async Task<MessagingHelper<List<AuthorDTO>>> DeleteAuthor(long authorId)
+        {
+            return await _service.DeleteAuthor(authorId);
         }
     }
 }
