@@ -1,0 +1,105 @@
+.list-books {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+  
+  .list-books__form {
+    width: 30%;
+    margin-right: 40px;
+    margin-left: 40px;
+  }
+  
+  .list-books__list {
+    width: 65%;
+    background-color: #f2f2f2;
+    padding: 20px;
+  }
+  
+  .list-books__form form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 50px;
+  }
+  
+  .list-books__form input[type="text"],
+  .list-books__form input[type="number"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: none;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+  }
+  
+  .list-books__form button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .list-books__list button {
+    background-color: #d3110a;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .list-books__list ul {
+    list-style: none;
+    padding: 0;
+    margin-top: 20px;
+    margin-bottom: 0;
+  }
+  
+  .list-books__list li {
+    margin-bottom: 20px;
+  }
+  
+  .list-books__list li h6 {
+    font-size: 18px;
+    margin-bottom: 5px;
+  }
+  
+  .list-books__list li p {
+    margin: 0;
+    font-size: 16px;
+  }
+  .list-books__pagination button {
+    background-color: #4CAF50; 
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  
+  .list-books__pagination span {
+    background-color: #ddd;
+    color: black;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    border-radius: 5px;
+  }
+  .list-books__pagination-buttons button:hover {
+    background-color: #f2f2f2;
+  }
+  
+  .list-books__pagination-buttons button:disabled {
+    background-color: #ddd;
+    cursor: default;
+  }
