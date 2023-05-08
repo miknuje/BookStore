@@ -5,7 +5,10 @@ import Home from './Home.jsx';
 import About from './About.jsx';
 import Books from './Books.tsx';
 import Authors from './Authors.tsx';
-
+import GetISBN from './GetISBN.tsx';
+import GetId from './GetId.tsx';
+import UpAuthor from './UpAuthor.tsx'
+import UpBook from './UpBook.tsx';
 
 function App() {
   return (
@@ -22,6 +25,18 @@ function App() {
             
           </Route>
           <Route path="/book" element={<Books />}>
+
+          </Route>
+          <Route path="/getISBN" element={<GetISBN />}>
+
+          </Route>
+          <Route path="/getbyId" element={<GetId />}>
+
+          </Route>
+          <Route path="/putauthor" element={<UpAuthor />}>
+
+          </Route>
+          <Route path="/putbook" element={<UpBook />}>
 
           </Route>
         </Routes>

@@ -1,0 +1,175 @@
+/* Estilos gerais da página */
+body {
+  background-color: #f8f8f8;
+  font-family: Arial, sans-serif;
+}
+
+/* Estilos para o cabeçalho */
+header {
+  background-color: #333;
+  color: #fff;
+  padding: 20px;
+  text-align: center;
+}
+
+h1 {
+  margin: 0;
+}
+
+/* Estilos para a seção de formulário */
+.list-books__form {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  padding: 20px;
+}
+
+.list-books__form h2 {
+  margin-top: 0;
+}
+
+.list-books__form label {
+  display: block;
+  margin-bottom: 10px;
+}
+
+.list-books__form input {
+  border: 1px solid #ddd;
+  font-size: 16px;
+  padding: 10px;
+  width: 50%;
+}
+
+.list-books__form button {
+  background-color: #333;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 10px;
+  padding: 10px;
+}
+
+.list-books__form h5 {
+  padding: 0.5rem;
+  margin-top: 1rem;
+  font-size: 1rem;
+}
+
+.list-books__form .success {
+  background-color: #c7ecc7;
+  border: 1px solid #6f9e6f;
+  color: #4f764f;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.list-books__form .error {
+  background-color: #f9d9d9;
+  border: 1px solid #cc6666;
+  color: #874949;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+/* Estilos para a seção de lista de livros */
+.list-books__list {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+}
+
+.list-books__list h1 {
+  margin-top: 0;
+}
+
+.list-books__list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.list-books__list li {
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+}
+
+
+.list-books__list li:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.list-books__list h6 {
+  margin-top: 0;
+}
+
+.list-books__list p {
+  margin: 0;
+}
+
+.list-books__list button {
+  background-color: #333;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 10px;
+  padding: 10px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.pagination__button {
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  color: #333;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  margin-right: 10px;
+  padding: 5px 10px;
+  transition: background-color 0.3s ease;
+}
+
+.pagination__button:hover,
+.pagination__button.active {
+  background-color: #333;
+  color: #fff;
+}
+
+label {
+  display: block;
+  font-family: Arial, sans-serif;
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+select {
+  font-family: Arial, sans-serif;
+  font-size: 16px;
+  color: #333;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  padding: 5px;
+  border-radius: 4px;
+  width: 100%;
+  max-width: 300px;
+}
+
+option {
+  font-family: Arial, sans-serif;
+  font-size: 16px;
+  color: #333;
+}
