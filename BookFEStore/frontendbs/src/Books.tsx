@@ -13,6 +13,9 @@ function Books() {
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [totalPages, setTotalPages] = useState(1);
   const [authors, setAuthors] = useState<AuthorDTO[]>([]);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [sortBy, setSortBy] = useState<'title' | 'price'>('title');
+  
 
   useEffect(() => {
     fetch('https://localhost:7275/api/Author/GetAuthor')
@@ -57,41 +60,74 @@ function Books() {
   }
 
   async function handleAdd(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = event.currentTarget;
-  
-    const authorId = Number(form.authorId.value);
-    const author = await getAuthor(authorId);
-  
-    const newBook = {
-      isbn: form.isbn.value,
-      bookName: form.bookName.value,
-      authorId: Number(form.authorId.value),
-      price: parseFloat(form.price.value)
-    };
-  
-    fetch('https://localhost:7275/api/Book/PostBook', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(newBook)
+  event.preventDefault();
+  const form = event.currentTarget;
+
+  const authorId = Number(form.authorId.value);
+  const author = await getAuthor(authorId);
+
+  const newBook = {
+    isbn: form.isbn.value,
+    bookName: form.bookName.value,
+    authorid: Number(form.authorId.value),
+    price: parseFloat(form.price.value),
+    author: author
+  };
+
+  fetch('https://localhost:7275/api/Book/PostBook', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(newBook)
+  })
+    .then(response => response.json())
+    .then(data => {
+      console.log(data);
+      setErrorSussess(data.success);
+      setMessage(data.message);
+      if (data.success) {
+        // Fetch the updated book list after successful addition
+        fetch('https://localhost:7275/api/Book/GetBook')
+          .then(response => response.json())
+          .then(data => {
+            if (Array.isArray(data.obj)) {
+              setBooks(data.obj);
+              setTotalPages(Math.ceil(data.obj.length / itemsPerPage));
+            } else {
+              console.log('obj não é um array');
+            }
+          })
+          .catch(error => {
+            console.log(error);
+          });
+
+        setTotalPages(Math.ceil(books.length / itemsPerPage) + 1);
+      }
     })
-      .then(response => response.json())
-      .then(data => {
-        console.log(data);
-        setErrorSussess(data.success);
-        setMessage(data.message);
-        if (data.success) {
-          setBooks(books.concat(newBook));
-          setTotalPages(Math.ceil(books.length / itemsPerPage) + 1);
-        }
-      })
-      .catch(error => {
-        console.log(error);
-      });
+    .catch(error => {
+      console.log(error);
+    });
+}
+
+function sortByTitle() {
+  if (sortBy === 'title') {
+    setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+  } else {
+    setSortBy('title');
+    setSortOrder('asc');
   }
-  
+}
+
+function sortByPrice() {
+  if (sortBy === 'price') {
+    setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+  } else {
+    setSortBy('price');
+    setSortOrder('asc');
+  }
+}
+
   async function getAuthor(authorId: number) {
     const response = await fetch(`https://localhost:7275/api/Author/GetAuthor?authorId=${authorId}`);
     const data = await response.json();
@@ -100,7 +136,20 @@ function Books() {
   function displayItems(items) {
     const lastIndex = currentPage * itemsPerPage;
     const firstIndex = lastIndex - itemsPerPage;
-    return items.slice(firstIndex, lastIndex);
+  
+    let sortedItems = [...items];
+  
+    if (sortBy === 'title') {
+      sortedItems.sort((a, b) => a.bookName.localeCompare(b.bookName));
+    } else if (sortBy === 'price') {
+      sortedItems.sort((a, b) => a.price - b.price);
+    }
+  
+    if (sortOrder === 'desc') {
+      sortedItems.reverse();
+    }
+  
+    return sortedItems.slice(firstIndex, lastIndex);
   }
   function changePage(pageNumber) {
     setCurrentPage(pageNumber);
@@ -146,14 +195,28 @@ function Books() {
         </div>
         <div className="list-books__list">
           <h1>List Books</h1>
+          <div className='sort-buttons'>
+            <button
+              onClick={sortByTitle}
+              className={sortBy === 'title' ? 'active' : ''}
+            >
+              Sort by Title
+            </button>
+            <button
+              onClick={sortByPrice}
+              className={sortBy === 'price' ? 'active' : ''}
+            >
+              Sort by Price
+            </button>
+          </div>
           <ul>
             {displayItems(books).map(bok => {
-              
+              {console.log(bok.author)}
               return (
-                {Console.log(bok.author.name)}
                 <li key={bok.isbn.toString()}>
                   <h6>ISBN: {bok.isbn.toString()}</h6>
                   <p>Book Name: {bok.bookName}</p>
+                  
                   {bok.author ? <p>Author: {bok.author.name}</p> : <p>Author: not found</p>}
                   <p>Price: {bok.price}</p>
                     {bok.isDeleted ? (

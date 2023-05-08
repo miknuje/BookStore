@@ -1,17 +1,14 @@
 import React, { useEffect, useState } from 'react';
-
-type Author = {
-  authorId: number;
-  name: string;
-  books: [];
-};
+import { AuthorDTO } from './dto/AuthorDTO';
 
 function Authors() {
-  const [authors, setAuthors] = useState<Author[]>([]);
+  const [authors, setAuthors] = useState<AuthorDTO[]>([]);
   const [authorName, setAuthorName] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [totalPages, setTotalPages] = useState(1);
+  const [sortType, setSortType] = useState<'id' | 'name' | null>(null);
+  const [activeSortType, setActiveSortType] = useState<'id' | 'name' | null>(null);
 
   useEffect(() => {
     fetch('https://localhost:7275/api/Author/GetAuthor')
@@ -29,37 +26,56 @@ function Authors() {
       });
   }, []);
 
+  useEffect(() => {
+    if (sortType) {
+      sortAuthors();
+    }
+  }, [sortType]);
+
+  function sortAuthors() {
+    const sortedAuthors = [...authors];
+
+    if (sortType === 'id') {
+      sortedAuthors.sort((a, b) => a.authorId - b.authorId);
+    } else if (sortType === 'name') {
+      sortedAuthors.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    setAuthors(sortedAuthors);
+  }
+
   function displayItems(items) {
     const lastIndex = currentPage * itemsPerPage;
     const firstIndex = lastIndex - itemsPerPage;
     return items.slice(firstIndex, lastIndex);
   }
+
   function changePage(pageNumber) {
     setCurrentPage(pageNumber);
   }
 
   function handleDelete(authorId: number) {
     fetch(`https://localhost:7275/api/Author/DeleteAuthor?authorId=${authorId}`, { method: 'DELETE' })
-    .then(response => response.json())
-    .then(data => {
-      console.log(data);
-      if (data.success) {   
-        setAuthors(authors.filter(author => author.authorId !== authorId));
-        setTotalPages(Math.ceil(authors.length / itemsPerPage));
-      }
-    })
-    .catch(error => {
-      console.log(error);
-    });
+      .then(response => response.json())
+      .then(data => {
+        console.log(data);
+        if (data.success) {
+          setAuthors(authors.filter(author => author.authorId !== authorId));
+          setTotalPages(Math.ceil(authors.length / itemsPerPage));
+        }
+      })
+      .catch(error => {
+        console.log(error);
+      });
   }
 
   function handleAdd(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-
+  
     if (!authorName.trim()) {
       return;
     }
-
+  
     fetch('https://localhost:7275/api/Author/AddAuthor', {
       method: 'POST',
       headers: {
@@ -67,20 +83,31 @@ function Authors() {
       },
       body: JSON.stringify({ name: authorName })
     })
-    .then(response => response.json())
-    .then(data => {
-      console.log(data);
-      if (data.success) {
-        console.log(data.obj);
-        setAuthors([...authors, { authorId: data.obj, name: authorName, books: [] }]);
-        setAuthorName('');
-        setTotalPages(Math.ceil(authors.length / itemsPerPage) + 1);
-      }
-    })
-    .catch(error => {
-      console.log(error);
-    });
+      .then(response => response.json())
+      .then(data => {
+        console.log(data);
+        if (data.success) {
+          fetch('https://localhost:7275/api/Author/GetAuthor')
+            .then(response => response.json())
+            .then(data => {
+              if (Array.isArray(data.obj)) {
+                setAuthors(data.obj);
+                setAuthorName('');
+                setTotalPages(Math.ceil(data.obj.length / itemsPerPage));
+              } else {
+                console.log('obj não é um array');
+              }
+            })
+            .catch(error => {
+              console.log(error);
+            });
+        }
+      })
+      .catch(error => {
+        console.log(error);
+      });
   }
+  
   
 
   return (
@@ -100,16 +127,36 @@ function Authors() {
       </div>
       <div className="list-books__list">
         <h1>List Authors</h1>
+        <div className="sort-buttons">
+          <button
+            onClick={() => {
+              setSortType('id');
+              setActiveSortType('id');
+            }}
+            className={activeSortType === 'id' ? 'active' : ''}
+          >
+            Sort by ID
+          </button>
+          <button
+            onClick={() => {
+              setSortType('name');
+              setActiveSortType('name');
+            }}
+            className={activeSortType === 'name' ? 'active' : ''}
+          >
+            Sort by Name
+          </button>
+        </div>
         <ul>
           {displayItems(authors).map((au) => {
             return (
-              <li key={au.authorId.toString()}>
-                <h6>Id: {au.authorId.toString()}</h6>
-                <p>Name: {au.name.toString()}</p>
+              <li key={au?.authorId}>
+                <h6>Id: {au?.authorId}</h6>
+                <p>Name: {au?.name}</p>
                 {au.isDeleted ? (
-                    <button disabled>Already deleted</button>
+                  <button disabled>Already deleted</button>
                 ) : (
-                    <button onClick={() => handleDelete(au.authorId)}>Delete</button>
+                  <button onClick={() => handleDelete(au.authorId)}>Delete</button>
                 )}
               </li>
             );

@@ -91,7 +91,7 @@ function GetISBN() {
             {displayItems(books).map((book, index) => (
               <li key={index}>
                 <h6>{book.isbn}</h6>
-                <p>Publisher: {book.bookName}</p>
+                <p>Book Name: {book.bookName}</p>
                 <p>Author: {book.author.name}</p>
                 {book.isDeleted ? (
                     <button disabled>Already deleted</button>

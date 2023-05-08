@@ -13,6 +13,8 @@ function UpBook() {
   const [price, setPrice] = useState(0);
   const [isbn, setIsbn] = useState('');
   const [authors, setAuthors] = useState<AuthorDTO[]>([]);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [sortBy, setSortBy] = useState<'title' | 'price'>('title');
 
   useEffect(() => {
     fetch('https://localhost:7275/api/Author/GetAuthor')
@@ -41,78 +43,120 @@ function UpBook() {
       });
   }, []);
 
+  function sortByTitle() {
+    if (sortBy === 'title') {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy('title');
+      setSortOrder('asc');
+    }
+  }
+
+  function sortByPrice() {
+    if (sortBy === 'price') {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy('price');
+      setSortOrder('asc');
+    }
+  }
+
+  async function getAuthor(authorId: number) {
+    const response = await fetch(`https://localhost:7275/api/Author/GetAuthor?authorId=${authorId}`);
+    const data = await response.json();
+    return data.obj;
+  }
+
   function displayItems(items) {
     const lastIndex = currentPage * itemsPerPage;
     const firstIndex = lastIndex - itemsPerPage;
-    return items.slice(firstIndex, lastIndex);
+
+    let sortedItems = [...items];
+
+    if (sortBy === 'title') {
+      sortedItems.sort((a, b) => a.bookName.localeCompare(b.bookName));
+    } else if (sortBy === 'price') {
+      sortedItems.sort((a, b) => a.price - b.price);
+    }
+
+    if (sortOrder === 'desc') {
+      sortedItems.reverse();
+    }
+
+    return sortedItems.slice(firstIndex, lastIndex);
   }
-  
+
   function changePage(pageNumber) {
     setCurrentPage(pageNumber);
   }
 
+  const pageNumbers: number[] = [];
+  for (let i = 1; i <= totalPages; i++) {
+    pageNumbers.push(i);
+  }
+
   function handleDelete(isbn: string) {
     fetch(`https://localhost:7275/api/Book/DeleteBook?isbn=${isbn}`, { method: 'DELETE' })
-      .then(response => {
-        if (response.ok) {
-          return response.json();
-        } else {
-          throw new Error('Failed to delete book');
-        }
-      })
-      .then(data => {
-        console.log(data);
-        if (data.success) {
-          setBooks(books.filter(book => book.isbn !== isbn));
-          setTotalPages(Math.ceil(books.length / itemsPerPage));
-        }
-      })
-      .catch(error => {
-        console.log(error);
-      });
-  }
-  
-  function handleUpdate(event) {
-    event.preventDefault();
-    if (!authorId) {
-      throw new Error('authorId is required');
-    }
-    const isbnValue = isbn;
-    const authorid = authorId;
-    const name = bookName;
-    const priceValue = price;
-    console.log(isbnValue)
-    console.log(name)
-    console.log(authorid)
-    console.log(priceValue)
-    const isDeletedRadioTrue = document.querySelector<HTMLInputElement>('input[name="isDeleted"]:checked');
-
-    const isDeletedRadioFalse = document.getElementById("isDeletedRadioFalse");
-    const isDeletedValue = isDeleted;
-    setIsDeleted(isDeletedValue);
-    fetch(`https://localhost:7275/api/Book/PutBook?isbn=${isbn}`, {
-        method: 'PUT',
-        headers: {
-        'Content-Type': 'application/json'
-      },
-       body: JSON.stringify({ isbn: isbnValue, authorId: authorid, bookName: name, price: priceValue, isDeleted: isDeletedValue })
-      })
-      .then(response => response.json())
-      .then(data => {
-        console.log(data);
-        if (data.success) {
-          setBooks(books.map(book => {
-            if (book.isbn === String()) {
-              return { ...book, name: name };
-            }
-            return book;
-          }));
-        }
-      })
-      .catch(error => {
-        console.log(error);
-      });
+    .then(response => {
+      if (response.ok) {
+        return response.json();
+      } else {
+        throw new Error('Failed to delete book');
       }
+    })
+    .then(data => {
+      console.log(data);
+      if (data.success) {
+        setBooks(books.filter(book => book.isbn !== isbn));
+        setTotalPages(Math.ceil(books.length / itemsPerPage));
+      }
+    })
+    .catch(error => {
+      console.log(error);
+    });
+}
+  
+function handleUpdate(event) {
+  event.preventDefault();
+  if (!authorId) {
+    throw new Error('authorId is required');
+  }
+  const isbnValue = isbn;
+  const authorid = authorId;
+  const name = bookName;
+  const priceValue = price;
+  console.log(isbnValue);
+  console.log(name);
+  console.log(authorid);
+  console.log(priceValue);
+  const isDeletedRadioTrue = document.querySelector<HTMLInputElement>('input[name="isDeleted"]:checked');
+
+  const isDeletedRadioFalse = document.getElementById("isDeletedRadioFalse");
+  const isDeletedValue = isDeleted;
+  setIsDeleted(isDeletedValue);
+  fetch(`https://localhost:7275/api/Book/PutBook?isbn=${isbn}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ isbn: isbnValue, authorId: authorid, bookName: name, price: priceValue, isDeleted: isDeletedValue })
+  })
+    .then(response => response.json())
+    .then(data => {
+      console.log(data);
+      if (data.success) {
+        setBooks(books.map(book => {
+          if (book.isbn === isbnValue) {
+            return { ...book, name: name };
+          }
+          return book;
+        }));
+      }
+    })
+    .catch(error => {
+      console.log(error);
+    });
+}
   
   return (
     <div className="list-books">
@@ -121,13 +165,15 @@ function UpBook() {
       </header>
       <div className="list-books__form">
         <h2>Update Book</h2>
-        <form onSubmit={(e) => {
-          e.preventDefault();
-          handleUpdate(e);
-        }}>
+        <form onSubmit={handleUpdate}>
           <label>
             ISBN:
-            <input type='text' name='isbn' value={isbn} onChange={(e) => setIsbn(e.target.value)} />
+            <select name="isbn" value={isbn} onChange={(e) => setIsbn(e.target.value)}>
+              <option value="">Select an ISBN</option>
+              {books.map(book => (
+                <option key={book.isbn} value={book.isbn}>{book.isbn}</option>
+              ))}
+            </select>
           </label>
           <label>
             Name:
@@ -135,17 +181,16 @@ function UpBook() {
           </label>
           <label>
             Author:
-            <select name='authorId' value={authorId || ''} onChange={(e) => setAuthorId(parseInt(e.target.value))}>
-            <option value=''>Select an author</option>
-            {authors.map(author => (
-            <option key={author.authorId} value={author.authorId}>{author.name}</option>
-    ))}
-  </select>
+            <select name="authorId" value={authorId || ''} onChange={(e) => setAuthorId(parseInt(e.target.value))}>
+              <option value="">Select an author</option>
+              {authors.map(author => (
+                <option key={author.authorId} value={author.authorId}>{author.name}</option>
+              ))}
+            </select>
           </label>
           <label>
             Price:
-            <input type="number" name="price" step="0.01" value={price || ''} onChange={(e) => setPrice(parseFloat(e.target.value))}/>
-
+            <input type="number" name="price" step="0.01" value={price || ''} onChange={(e) => setPrice(parseFloat(e.target.value))} />
           </label>
           <label>
             <input type="radio" id="isDeletedRadioTrue" name="isDeleted" value="true" checked={isDeleted === true} onChange={() => setIsDeleted(true)} />
@@ -160,6 +205,20 @@ function UpBook() {
       </div>
       <div className="list-books__list">
         <h1>List Books</h1>
+        <div className='sort-buttons'>
+            <button
+              onClick={sortByTitle}
+              className={sortBy === 'title' ? 'active' : ''}
+            >
+              Sort by Title
+            </button>
+            <button
+              onClick={sortByPrice}
+              className={sortBy === 'price' ? 'active' : ''}
+            >
+              Sort by Price
+            </button>
+          </div>
         <ul>
           {displayItems(books).map((bok) => {
             return (

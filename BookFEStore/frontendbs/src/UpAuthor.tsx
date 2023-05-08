@@ -9,6 +9,8 @@ function UpAuthor() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [totalPages, setTotalPages] = useState(1);
+  const [sortType, setSortType] = useState<'id' | 'name' | null>(null);
+  const [activeSortType, setActiveSortType] = useState<'id' | 'name' | null>(null);
 
   useEffect(() => {
     fetch('https://localhost:7275/api/Author/GetAllAuthor')
@@ -25,6 +27,24 @@ function UpAuthor() {
         console.log(error);
       });
   }, []);
+
+  useEffect(() => {
+    if (sortType) {
+      sortAuthors();
+    }
+  }, [sortType]);
+
+  function sortAuthors() {
+    const sortedAuthors = [...authors];
+
+    if (sortType === 'id') {
+      sortedAuthors.sort((a, b) => a.authorId - b.authorId);
+    } else if (sortType === 'name') {
+      sortedAuthors.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    setAuthors(sortedAuthors);
+  }
 
   function displayItems(items) {
     const lastIndex = currentPage * itemsPerPage;
@@ -104,7 +124,12 @@ function UpAuthor() {
         }}>
           <label>
             Id:
-            <input type='number' name='authorId' value={authorId || ''} onChange={(e) => setAuthorId(parseInt(e.target.value))} />
+            <select name="authorId" value={authorId} onChange={(e) => setAuthorId(parseInt(e.target.value))}>
+              <option value="">Select an ID</option>
+              {authors.map(au => (
+                <option key={au.authorId} value={au.authorId}>{au.authorId}</option>
+                ))}
+                </select>
           </label>
           <label>
             Name:
@@ -123,6 +148,26 @@ function UpAuthor() {
       </div>
       <div className="list-books__list">
         <h1>List Authors</h1>
+        <div className="sort-buttons">
+          <button
+            onClick={() => {
+              setSortType('id');
+              setActiveSortType('id');
+            }}
+            className={activeSortType === 'id' ? 'active' : ''}
+          >
+            Sort by ID
+          </button>
+          <button
+            onClick={() => {
+              setSortType('name');
+              setActiveSortType('name');
+            }}
+            className={activeSortType === 'name' ? 'active' : ''}
+          >
+            Sort by Name
+          </button>
+        </div>
         <ul>
           {displayItems(authors).map((au) => {
             return (
