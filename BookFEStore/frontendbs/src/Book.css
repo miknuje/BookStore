@@ -204,3 +204,9 @@ option {
   color: #999;
   cursor: not-allowed;
 }
+
+.error-message {
+  color: red;
+  font-size: 14px;
+  margin-top: 5px;
+}

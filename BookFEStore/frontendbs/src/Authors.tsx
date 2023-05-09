@@ -9,6 +9,8 @@ function Authors() {
   const [totalPages, setTotalPages] = useState(1);
   const [sortType, setSortType] = useState<'id' | 'name' | null>(null);
   const [activeSortType, setActiveSortType] = useState<'id' | 'name' | null>(null);
+  const [message, setMessage] = useState('');
+  const [errorSussess, setErrorSussess] = useState(false);
 
   useEffect(() => {
     fetch('https://localhost:7275/api/Author/GetAuthor')
@@ -56,12 +58,22 @@ function Authors() {
 
   function handleDelete(authorId: number) {
     fetch(`https://localhost:7275/api/Author/DeleteAuthor?authorId=${authorId}`, { method: 'DELETE' })
-      .then(response => response.json())
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw new Error('Failed to delete book');
+        }
+      })
       .then(data => {
         console.log(data);
         if (data.success) {
-          setAuthors(authors.filter(author => author.authorId !== authorId));
-          setTotalPages(Math.ceil(authors.length / itemsPerPage));
+          setAuthors(authors => authors.map(author => {
+            if (author.authorId === authorId) {
+              return { ...author, isDeleted: true };
+            }
+            return author;
+          }));
         }
       })
       .catch(error => {
@@ -71,11 +83,12 @@ function Authors() {
 
   function handleAdd(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-  
-    if (!authorName.trim()) {
+    if (!authorName || authorName.trim() == "") {
+      setErrorSussess(false);
+      setMessage("Error: Author name is required");
       return;
     }
-  
+
     fetch('https://localhost:7275/api/Author/AddAuthor', {
       method: 'POST',
       headers: {
@@ -124,6 +137,7 @@ function Authors() {
           </label>
           <button type="submit">Add</button>
         </form>
+        <h5 className={errorSussess ? 'success' : 'error'}>{message}</h5>
       </div>
       <div className="list-books__list">
         <h1>List Authors</h1>
@@ -159,6 +173,7 @@ function Authors() {
                   <button onClick={() => handleDelete(au.authorId)}>Delete</button>
                 )}
               </li>
+              
             );
           })}
         </ul>
@@ -172,11 +187,7 @@ function Authors() {
           {Array.from({ length: Math.ceil(authors.length / itemsPerPage) }, (_, index) => {
             const pageNumber = index + 1;
             return (
-              <button
-                key={pageNumber}
-                onClick={() => changePage(pageNumber)}
-                className={currentPage === pageNumber ? 'active' : ''}
-              >
+              <button key={pageNumber} onClick={() => changePage(pageNumber)} className={currentPage === pageNumber ? 'active' : ''}>
                 {pageNumber}
               </button>
             );

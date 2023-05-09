@@ -54,12 +54,22 @@ function GetISBN() {
   }
   function handleDelete(isbn: string) {
     fetch(`https://localhost:7275/api/Book/DeleteBook?isbn=${isbn}`, { method: 'DELETE' })
-      .then(response => response.json())
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw new Error('Failed to delete book');
+        }
+      })
       .then(data => {
         console.log(data);
         if (data.success) {
-          setBooks(books.filter(book => book.isbn !== isbn));
-          setTotalPages(Math.ceil(books.length / itemsPerPage));
+          setBooks(books => books.map(book => {
+            if (book.isbn === isbn) {
+              return { ...book, isDeleted: true };
+            }
+            return book;
+          }));
         }
       })
       .catch(error => {
