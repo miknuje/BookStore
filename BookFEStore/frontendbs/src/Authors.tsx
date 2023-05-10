@@ -10,7 +10,7 @@ function Authors() {
   const [sortType, setSortType] = useState<'id' | 'name' | null>(null);
   const [activeSortType, setActiveSortType] = useState<'id' | 'name' | null>(null);
   const [message, setMessage] = useState('');
-  const [errorSussess, setErrorSussess] = useState(false);
+  const [errorSuccess, setErrorSuccess] = useState<null | boolean>(null);
 
   useEffect(() => {
     fetch('https://localhost:7275/api/Author/GetAuthor')
@@ -84,7 +84,7 @@ function Authors() {
   function handleAdd(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!authorName || authorName.trim() == "") {
-      setErrorSussess(false);
+      setErrorSuccess(false);
       setMessage("Error: Author name is required");
       return;
     }
@@ -137,7 +137,7 @@ function Authors() {
           </label>
           <button type="submit">Add</button>
         </form>
-        <h5 className={errorSussess ? 'success' : 'error'}>{message}</h5>
+        <h5 className={errorSuccess === false ? 'error' : (errorSuccess === null ? 'invisible' : 'success')}>{message}</h5>
       </div>
       <div className="list-books__list">
         <h1>List Authors</h1>

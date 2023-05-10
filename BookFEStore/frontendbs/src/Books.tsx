@@ -8,7 +8,7 @@ function Books() {
   const [books, setBooks] = useState<BookDTO[]>([]);
   const [authorId, setAuthorId] = useState<number>();
   const [message, setMessage] = useState('');
-  const [errorSussess, setErrorSussess] = useState(false);
+  const [errorSuccess, setErrorSuccess] = useState<null | boolean>(null);;
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [totalPages, setTotalPages] = useState(1);
@@ -73,27 +73,27 @@ function Books() {
   event.preventDefault();
   const form = event.currentTarget;
   if (!form.authorId.value) {
-    setErrorSussess(false);
+    setErrorSuccess(false);
       setMessage("Error: Author is required");
     return;
   }
   if (!form.isbn.value) {
-    setErrorSussess(false);
+    setErrorSuccess(false);
       setMessage("Error: ISBN is required");
     return;
   }
   if (!form.bookName.value || form.bookName.value.trim() == "") {
-    setErrorSussess(false);
+    setErrorSuccess(false);
       setMessage("Error: Book name is required");
     return;
   }
   if (!form.price.value) {
-    setErrorSussess(false);
+    setErrorSuccess(false);
       setMessage("Error: Price is required");
     return;
   }
   if (form.price.value < 0) {
-    setErrorSussess(false);
+    setErrorSuccess(false);
       setMessage("Error: Invalid price");
     return;
   }
@@ -119,7 +119,7 @@ function Books() {
     .then(response => response.json())
     .then(data => {
       console.log(data);
-      setErrorSussess(data.success);
+      setErrorSuccess(data.success);
       setMessage(data.message);
       if (data.success) {
         // Fetch the updated book list after successful addition
@@ -226,7 +226,7 @@ function sortByPrice() {
             </label>
             <button type="submit">Add</button>
           </form>
-          <h5 className={errorSussess ? 'success' : 'error'}>{message}</h5>
+          <h5 className={errorSuccess === false ? 'error' : (errorSuccess === null ? 'invisible' : 'success')}>{message}</h5>
         </div>
         <div className="list-books__list">
           <h1>List Books</h1>

@@ -16,7 +16,7 @@ function UpBook() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [sortBy, setSortBy] = useState<'title' | 'price'>('title');
   const [message, setMessage] = useState('');
-  const [errorSussess, setErrorSussess] = useState(false);
+  const [errorSuccess, setErrorSuccess] = useState<null | boolean>(null);
 
 
   useEffect(() => {
@@ -122,31 +122,31 @@ function UpBook() {
         console.log(error);
       });
   }
-  /*   */
+
   function handleUpdate(event) {
     event.preventDefault();
     if (!authorId) {
-      setErrorSussess(false);
+      setErrorSuccess(false);
       setMessage("Error: Author is required");
       return;
     }
     if (!isbn) {
-      setErrorSussess(false);
+      setErrorSuccess(false);
       setMessage("Error: ISBN is required");
       return;
     }
     if (!bookName || bookName.trim() === "") {
-      setErrorSussess(false);
+      setErrorSuccess(false);
       setMessage("Error: Book name is required");
       return;
     }
     if (!price) {
-      setErrorSussess(false);
+      setErrorSuccess(false);
       setMessage("Error: Price is required");
       return;
     }
     if (price < 0) {
-      setErrorSussess(false);
+      setErrorSuccess(false);
       setMessage("Error: Invalid price");
       return;
     }
@@ -167,7 +167,7 @@ function UpBook() {
       .then(response => response.json())
       .then(data => {
         if (data.success) {
-          setErrorSussess(data.success);
+          setErrorSuccess(data.success);
           setMessage(data.message);
           setBooks(books => books.map(book => {
             if (book.isbn === isbnValue) {
@@ -237,7 +237,8 @@ function UpBook() {
           </label>
           <button type="submit">Update</button>
         </form>
-        <h5 className={errorSussess ? 'success' : 'error'}>{message}</h5>
+        <h5 className={errorSuccess === false ? 'error' : (errorSuccess === null ? 'invisible' : 'success')}>{message}</h5>
+
       </div>
       <div className="list-books__list">
         <h1>List Books</h1>

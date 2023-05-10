@@ -12,7 +12,7 @@ function UpAuthor() {
   const [sortType, setSortType] = useState<'id' | 'name' | null>(null);
   const [activeSortType, setActiveSortType] = useState<'id' | 'name' | null>(null);
   const [message, setMessage] = useState('');
-  const [errorSussess, setErrorSussess] = useState(false);
+  const [errorSuccess, setErrorSuccess] = useState<null | boolean>(null);
 
 
   useEffect(() => {
@@ -87,12 +87,12 @@ function UpAuthor() {
   function handleUpdate(event) {
     event.preventDefault();
     if (!authorId) {
-      setErrorSussess(false);
+      setErrorSuccess(false);
       setMessage("Error: Id is required");
       return;
     }
     if (!authorName || authorName.trim() == "") {
-      setErrorSussess(false);
+      setErrorSuccess(false);
       setMessage("Error: Author is required");
       return;
     }
@@ -116,7 +116,7 @@ function UpAuthor() {
     .then(data => {
       console.log(data);
       if (data.success) {
-        setErrorSussess(data.success);
+        setErrorSuccess(data.success);
         setMessage(data.message);
         setAuthors(authors && authors.map(author => {
           if (author.authorId === parseInt(String(id))) {
@@ -166,7 +166,7 @@ function UpAuthor() {
           </label>
           <button type="submit">Update</button>
         </form>
-        <h5 className={errorSussess ? 'success' : 'error'}>{message}</h5>
+        <h5 className={errorSuccess === false ? 'error' : (errorSuccess === null ? 'invisible' : 'success')}>{message}</h5>
       </div>
       <div className="list-books__list">
         <h1>List Authors</h1>
