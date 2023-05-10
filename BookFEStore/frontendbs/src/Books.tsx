@@ -8,7 +8,7 @@ function Books() {
   const [books, setBooks] = useState<BookDTO[]>([]);
   const [authorId, setAuthorId] = useState<number>();
   const [message, setMessage] = useState('');
-  const [errorSussess, setErrorSussess] = useState(false);
+  const [errorSuccess, setErrorSuccess] = useState<null | boolean>(null);;
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [totalPages, setTotalPages] = useState(1);
@@ -46,12 +46,22 @@ function Books() {
 
   function handleDelete(isbn: string) {
     fetch(`https://localhost:7275/api/Book/DeleteBook?isbn=${isbn}`, { method: 'DELETE' })
-      .then(response => response.json())
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw new Error('Failed to delete book');
+        }
+      })
       .then(data => {
         console.log(data);
         if (data.success) {
-          setBooks(books.filter(book => book.isbn !== isbn));
-          setTotalPages(Math.ceil(books.length / itemsPerPage));
+          setBooks(books => books.map(book => {
+            if (book.isbn === isbn) {
+              return { ...book, isDeleted: true };
+            }
+            return book;
+          }));
         }
       })
       .catch(error => {
@@ -62,6 +72,31 @@ function Books() {
   async function handleAdd(event: React.FormEvent<HTMLFormElement>) {
   event.preventDefault();
   const form = event.currentTarget;
+  if (!form.authorId.value) {
+    setErrorSuccess(false);
+      setMessage("Error: Author is required");
+    return;
+  }
+  if (!form.isbn.value) {
+    setErrorSuccess(false);
+      setMessage("Error: ISBN is required");
+    return;
+  }
+  if (!form.bookName.value || form.bookName.value.trim() == "") {
+    setErrorSuccess(false);
+      setMessage("Error: Book name is required");
+    return;
+  }
+  if (!form.price.value) {
+    setErrorSuccess(false);
+      setMessage("Error: Price is required");
+    return;
+  }
+  if (form.price.value < 0) {
+    setErrorSuccess(false);
+      setMessage("Error: Invalid price");
+    return;
+  }
 
   const authorId = Number(form.authorId.value);
   const author = await getAuthor(authorId);
@@ -84,7 +119,7 @@ function Books() {
     .then(response => response.json())
     .then(data => {
       console.log(data);
-      setErrorSussess(data.success);
+      setErrorSuccess(data.success);
       setMessage(data.message);
       if (data.success) {
         // Fetch the updated book list after successful addition
@@ -180,7 +215,7 @@ function sortByPrice() {
             Author:
             <select name='authorId' value={authorId || ''} onChange={(e) => setAuthorId(parseInt(e.target.value))}>
             <option value=''>Select an author</option>
-            {authors.map(author => (
+            {authors && authors.map(author => (
             <option key={author.authorId} value={author.authorId}>{author.name}</option>
         ))}
         </select>
@@ -191,7 +226,7 @@ function sortByPrice() {
             </label>
             <button type="submit">Add</button>
           </form>
-          <h5 className={errorSussess ? 'success' : 'error'}>{message}</h5>
+          <h5 className={errorSuccess === false ? 'error' : (errorSuccess === null ? 'invisible' : 'success')}>{message}</h5>
         </div>
         <div className="list-books__list">
           <h1>List Books</h1>
@@ -210,8 +245,7 @@ function sortByPrice() {
             </button>
           </div>
           <ul>
-            {displayItems(books).map(bok => {
-              {console.log(bok.author)}
+            {displayItems(books)?.map(bok => {
               return (
                 <li key={bok.isbn.toString()}>
                   <h6>ISBN: {bok.isbn.toString()}</h6>
@@ -219,14 +253,15 @@ function sortByPrice() {
                   
                   {bok.author ? <p>Author: {bok.author.name}</p> : <p>Author: not found</p>}
                   <p>Price: {bok.price}</p>
-                    {bok.isDeleted ? (
-                      <button disabled>Already deleted</button>
-                    ) : (
-                      <button onClick={() => handleDelete(bok.isbn)}>Delete</button>
-                    )}
+                  {bok.isDeleted ? (
+                    <button disabled>Already deleted</button>
+                  ) : (
+                    <button onClick={() => handleDelete(bok.isbn)}>Delete</button>
+                  )}
                 </li>
               );
             })}
+            
           </ul>
           <div className="pagination">
             <button

@@ -54,12 +54,22 @@ function GetId() {
   }
   function handleDelete(authorId: number) {
     fetch(`https://localhost:7275/api/Author/DeleteAuthor?authorId=${authorId}`, { method: 'DELETE' })
-      .then(response => response.json())
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw new Error('Failed to delete book');
+        }
+      })
       .then(data => {
         console.log(data);
         if (data.success) {
-          setAuthors(authors.filter(book => book.authorId !== authorId));
-          setTotalPages(Math.ceil(authors.length / itemsPerPage));
+          setAuthors(authors => authors.map(author => {
+            if (author.authorId === authorId) {
+              return { ...author, isDeleted: true };
+            }
+            return author;
+          }));
         }
       })
       .catch(error => {

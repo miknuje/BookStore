@@ -15,6 +15,9 @@ function UpBook() {
   const [authors, setAuthors] = useState<AuthorDTO[]>([]);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [sortBy, setSortBy] = useState<'title' | 'price'>('title');
+  const [message, setMessage] = useState('');
+  const [errorSuccess, setErrorSuccess] = useState<null | boolean>(null);
+
 
   useEffect(() => {
     fetch('https://localhost:7275/api/Author/GetAuthor')
@@ -97,66 +100,98 @@ function UpBook() {
 
   function handleDelete(isbn: string) {
     fetch(`https://localhost:7275/api/Book/DeleteBook?isbn=${isbn}`, { method: 'DELETE' })
-    .then(response => {
-      if (response.ok) {
-        return response.json();
-      } else {
-        throw new Error('Failed to delete book');
-      }
-    })
-    .then(data => {
-      console.log(data);
-      if (data.success) {
-        setBooks(books.filter(book => book.isbn !== isbn));
-        setTotalPages(Math.ceil(books.length / itemsPerPage));
-      }
-    })
-    .catch(error => {
-      console.log(error);
-    });
-}
-  
-function handleUpdate(event) {
-  event.preventDefault();
-  if (!authorId) {
-    throw new Error('authorId is required');
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw new Error('Failed to delete book');
+        }
+      })
+      .then(data => {
+        console.log(data);
+        if (data.success) {
+          setBooks(books => books.map(book => {
+            if (book.isbn === isbn) {
+              return { ...book, isDeleted: true };
+            }
+            return book;
+          }));
+        }
+      })
+      .catch(error => {
+        console.log(error);
+      });
   }
-  const isbnValue = isbn;
-  const authorid = authorId;
-  const name = bookName;
-  const priceValue = price;
-  console.log(isbnValue);
-  console.log(name);
-  console.log(authorid);
-  console.log(priceValue);
-  const isDeletedRadioTrue = document.querySelector<HTMLInputElement>('input[name="isDeleted"]:checked');
 
-  const isDeletedRadioFalse = document.getElementById("isDeletedRadioFalse");
-  const isDeletedValue = isDeleted;
-  setIsDeleted(isDeletedValue);
-  fetch(`https://localhost:7275/api/Book/PutBook?isbn=${isbn}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ isbn: isbnValue, authorId: authorid, bookName: name, price: priceValue, isDeleted: isDeletedValue })
-  })
-    .then(response => response.json())
-    .then(data => {
-      console.log(data);
-      if (data.success) {
-        setBooks(books.map(book => {
-          if (book.isbn === isbnValue) {
-            return { ...book, name: name };
-          }
-          return book;
-        }));
-      }
+  function handleUpdate(event) {
+    event.preventDefault();
+    if (!authorId) {
+      setErrorSuccess(false);
+      setMessage("Error: Author is required");
+      return;
+    }
+    if (!isbn) {
+      setErrorSuccess(false);
+      setMessage("Error: ISBN is required");
+      return;
+    }
+    if (!bookName || bookName.trim() === "") {
+      setErrorSuccess(false);
+      setMessage("Error: Book name is required");
+      return;
+    }
+    if (!price) {
+      setErrorSuccess(false);
+      setMessage("Error: Price is required");
+      return;
+    }
+    if (price < 0) {
+      setErrorSuccess(false);
+      setMessage("Error: Invalid price");
+      return;
+    }
+    
+    const isbnValue = isbn;
+    const authorIdValue = authorId;
+    const name = bookName;
+    const priceValue = price;
+    const isDeletedValue = isDeleted;
+  
+    fetch(`https://localhost:7275/api/Book/PutBook?isbn=${isbn}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ isbn: isbnValue, authorId: authorIdValue, bookName: name, price: priceValue, isDeleted: isDeletedValue })
     })
-    .catch(error => {
-      console.log(error);
-    });
-}
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          setErrorSuccess(data.success);
+          setMessage(data.message);
+          setBooks(books => books.map(book => {
+            if (book.isbn === isbnValue) {
+              return { ...book, isDeleted: isDeleted };
+            }
+            return book;
+          }));
+          fetch('https://localhost:7275/api/Book/GetAllBook')
+          .then(response => response.json())
+          .then(data => {
+            if (Array.isArray(data.obj)) {
+              setBooks(data.obj);
+              setTotalPages(Math.ceil(data.obj.length / itemsPerPage));
+            } else {
+              console.log('obj não é um array');
+            }
+          })
+        }
+      })
+      .catch(error => {
+        console.log(error);
+      });
+  }
+  
   
   return (
     <div className="list-books">
@@ -170,7 +205,7 @@ function handleUpdate(event) {
             ISBN:
             <select name="isbn" value={isbn} onChange={(e) => setIsbn(e.target.value)}>
               <option value="">Select an ISBN</option>
-              {books.map(book => (
+              {books && books.map(book => (
                 <option key={book.isbn} value={book.isbn}>{book.isbn}</option>
               ))}
             </select>
@@ -183,7 +218,7 @@ function handleUpdate(event) {
             Author:
             <select name="authorId" value={authorId || ''} onChange={(e) => setAuthorId(parseInt(e.target.value))}>
               <option value="">Select an author</option>
-              {authors.map(author => (
+              {authors && authors.map(author => (
                 <option key={author.authorId} value={author.authorId}>{author.name}</option>
               ))}
             </select>
@@ -194,14 +229,16 @@ function handleUpdate(event) {
           </label>
           <label>
             <input type="radio" id="isDeletedRadioTrue" name="isDeleted" value="true" checked={isDeleted === true} onChange={() => setIsDeleted(true)} />
-            Deletado
+            Deleted
           </label>
           <label>
             <input type="radio" id="isDeletedRadioFalse" name="isDeleted" value="false" checked={isDeleted === false} onChange={() => setIsDeleted(false)} />
-            Não Deletado
+            Not Deleted
           </label>
           <button type="submit">Update</button>
         </form>
+        <h5 className={errorSuccess === false ? 'error' : (errorSuccess === null ? 'invisible' : 'success')}>{message}</h5>
+
       </div>
       <div className="list-books__list">
         <h1>List Books</h1>
@@ -247,11 +284,7 @@ function handleUpdate(event) {
           {Array.from({ length: totalPages }, (_, index) => {
             const pageNumber = index + 1;
             return (
-              <button
-                key={pageNumber}
-                onClick={() => changePage(pageNumber)}
-                className={currentPage === pageNumber ? 'active' : ''}
-              >
+              <button key={pageNumber} onClick={() => changePage(pageNumber)}className={currentPage === pageNumber ? 'active' : ''}>
                 {pageNumber}
               </button>
             );

@@ -11,6 +11,9 @@ function UpAuthor() {
   const [totalPages, setTotalPages] = useState(1);
   const [sortType, setSortType] = useState<'id' | 'name' | null>(null);
   const [activeSortType, setActiveSortType] = useState<'id' | 'name' | null>(null);
+  const [message, setMessage] = useState('');
+  const [errorSuccess, setErrorSuccess] = useState<null | boolean>(null);
+
 
   useEffect(() => {
     fetch('https://localhost:7275/api/Author/GetAllAuthor')
@@ -58,31 +61,47 @@ function UpAuthor() {
 
   function handleDelete(authorId: number) {
     fetch(`https://localhost:7275/api/Author/DeleteAuthor?authorId=${authorId}`, { method: 'DELETE' })
-    .then(response => response.json())
-    .then(data => {
-      console.log(data);
-      if (data.success) {   
-        setAuthors(authors.filter(author => author.authorId !== authorId));
-        setTotalPages(Math.ceil(authors.length / itemsPerPage));
-      }
-    })
-    .catch(error => {
-      console.log(error);
-    });
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw new Error('Failed to delete book');
+        }
+      })
+      .then(data => {
+        console.log(data);
+        if (data.success) {
+          setAuthors(authors => authors.map(author => {
+            if (author.authorId === authorId) {
+              return { ...author, isDeleted: true };
+            }
+            return author;
+          }));
+        }
+      })
+      .catch(error => {
+        console.log(error);
+      });
   }
   
   function handleUpdate(event) {
     event.preventDefault();
     if (!authorId) {
-      throw new Error('authorId is required');
+      setErrorSuccess(false);
+      setMessage("Error: Id is required");
+      return;
+    }
+    if (!authorName || authorName.trim() == "") {
+      setErrorSuccess(false);
+      setMessage("Error: Author is required");
+      return;
     }
     const id: number = authorId;
     const name = authorName;
-    console.log(authorId)
-    console.log(name)
-    const isDeletedRadioTrue = document.querySelector<HTMLInputElement>('input[name="isDeleted"]:checked');
 
+    const isDeletedRadioTrue = document.querySelector<HTMLInputElement>('input[name="isDeleted"]:checked');
     const isDeletedRadioFalse = document.getElementById("isDeletedRadioFalse");
+
     const isDeletedValue = isDeleted;
     setIsDeleted(isDeletedValue);
 
@@ -97,9 +116,11 @@ function UpAuthor() {
     .then(data => {
       console.log(data);
       if (data.success) {
-        setAuthors(authors.map(author => {
+        setErrorSuccess(data.success);
+        setMessage(data.message);
+        setAuthors(authors && authors.map(author => {
           if (author.authorId === parseInt(String(id))) {
-            return { ...author, name: name };
+            return { ...author, name: name, isDeleted: data.isDeleted };
           }
           return author;
         }));
@@ -126,7 +147,7 @@ function UpAuthor() {
             Id:
             <select name="authorId" value={authorId} onChange={(e) => setAuthorId(parseInt(e.target.value))}>
               <option value="">Select an ID</option>
-              {authors.map(au => (
+              {authors && authors.map(au => (
                 <option key={au.authorId} value={au.authorId}>{au.authorId}</option>
                 ))}
                 </select>
@@ -137,14 +158,15 @@ function UpAuthor() {
           </label>
           <label>
             <input type="radio" id="isDeletedRadioTrue" name="isDeleted" value="true" checked={isDeleted === true} onChange={() => setIsDeleted(true)} />
-            Deletado
+            Deleted
           </label>
           <label>
             <input type="radio" id="isDeletedRadioFalse" name="isDeleted" value="false" checked={isDeleted === false} onChange={() => setIsDeleted(false)} />
-            Não Deletado
+            Not Deleted
           </label>
           <button type="submit">Update</button>
         </form>
+        <h5 className={errorSuccess === false ? 'error' : (errorSuccess === null ? 'invisible' : 'success')}>{message}</h5>
       </div>
       <div className="list-books__list">
         <h1>List Authors</h1>
