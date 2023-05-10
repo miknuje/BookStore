@@ -5,7 +5,7 @@ import { AuthorDTO } from './dto/AuthorDTO';
 function GetISBN() {
   const [isbn, setIsbn] = useState('');
   const [books, setBooks] = useState<Array<{isbn: string, bookName: string,authorId: number, author: AuthorDTO}>>([]);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [totalPages, setTotalPages] = useState(1);
@@ -15,20 +15,28 @@ function GetISBN() {
       try {
         const response = await fetch(`https://localhost:7275/${isbn}`);
         const data = await response.json();
-        setBooks(data.obj);
-        setError(null);
-        setTotalPages(Math.ceil(data.obj.length / itemsPerPage));
+  
+        if (data.success) {
+          setBooks(data.obj);
+          setError('');
+          setTotalPages(Math.ceil(data.obj.length / itemsPerPage));
+        } else {
+          setBooks([]);
+          setError(data.message);
+          setTotalPages(1);
+        }
       } catch (error) {
         setBooks([]);
-        setError(error.message);
+        setError('Error: Failed to fetch books');
         setTotalPages(1);
       }
     }
-
+  
     if (isbn) {
       getBook();
     }
   }, [isbn, itemsPerPage]);
+  
 
   function handleIsbnChange(event) {
     setIsbn(event.target.value);
